@@ -86,6 +86,15 @@ const Toolbar = ({
     saveSettingsToStorage({ strokeWidth: width });
   };
 
+  // 선 굵기 옵션
+  const [showStrokeWidthOptions, setShowStrokeWidthOptions] = useState(false);
+  const strokeWidthOptions = [2, 5, 10];
+
+  const handleSelectStrokeWidth = (width: number) => {
+    handleSetStrokeWidth(width);
+    setShowStrokeWidthOptions(false); // 선택하면 메뉴 닫기
+  };
+
   // 툴바 위치 저장
   const [toolbarPos, setToolbarPos] = useState<Pos>(() => {
     try {
@@ -106,6 +115,7 @@ const Toolbar = ({
 
   return (
     <ToolbarContainer>
+      {/* 자유 그리기, 도형 선택 */}
       <Button
         selected={tool === "pencil"}
         onClick={() => handleSetTool("pencil")}
@@ -122,6 +132,7 @@ const Toolbar = ({
         <FaRegCircle />
       </Button>
 
+      {/* 선 색깔 */}
       <label>
         <IoIosColorPalette />
         <input
@@ -132,6 +143,7 @@ const Toolbar = ({
         />
       </label>
 
+      {/* 채우기 */}
       <label>
         <IoColorFill />
         <input
@@ -142,21 +154,62 @@ const Toolbar = ({
         />
       </label>
 
-      <label>
-        <MdLineWeight />
-        <input
-          type="range"
-          min={1}
-          max={20}
-          value={strokeWidth}
-          onChange={(e) => handleSetStrokeWidth(Number(e.target.value))}
-          style={{ marginLeft: 4 }}
-        />
-      </label>
+      {/* 선 굵기 */}
+      {/* 선 굵기 아이콘 클릭 시 토글 */}
+      <div style={{ position: "relative", display: "inline-block" }}>
+        <Button
+          onClick={() => setShowStrokeWidthOptions((v) => !v)}
+          style={{ width: "100%" }}
+        >
+          <MdLineWeight />
+        </Button>
 
+        {/* 토글 상태에 따른 3단계 굵기 버튼 */}
+        {showStrokeWidthOptions && (
+          <div
+            style={{
+              position: "absolute",
+              top: "120%",
+              left: 0,
+              background: "white",
+              border: "1px solid #ccc",
+              borderRadius: 6,
+              padding: 8,
+              display: "flex",
+              gap: 8,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              zIndex: 1000,
+            }}
+          >
+            {strokeWidthOptions.map((width) => (
+              <button
+                key={width}
+                onClick={() => handleSelectStrokeWidth(width)}
+                style={{
+                  padding: "6px 12px",
+                  backgroundColor: strokeWidth === width ? "#007bff" : "#eee",
+                  color: strokeWidth === width ? "white" : "black",
+                  border: "none",
+                  borderRadius: 4,
+                  cursor: "pointer",
+                  minWidth: 40,
+                  userSelect: "none",
+                }}
+                aria-pressed={strokeWidth === width}
+              >
+                {width}px
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 이전 undo*/}
       <Button onClick={onUndo} disabled={!canUndo}>
         <IoArrowUndo />
       </Button>
+
+      {/* 앞으로 redo*/}
       <Button onClick={onRedo} disabled={!canRedo}>
         <IoArrowRedo />
       </Button>
