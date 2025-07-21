@@ -1,4 +1,5 @@
-import { ToolbarContainer, Button } from "./styled"; // 상대 경로 확인
+import React, { useCallback } from "react";
+import { ToolbarContainer, Button } from "./styled";
 import { IoArrowRedo, IoArrowUndo } from "react-icons/io5";
 
 type Props = {
@@ -16,6 +17,8 @@ type Props = {
   canRedo: boolean;
 };
 
+const STORAGE_KEY = "drawingAppToolbarSettings";
+
 const Toolbar = ({
   tool,
   setTool,
@@ -30,15 +33,61 @@ const Toolbar = ({
   canUndo,
   canRedo,
 }: Props) => {
+  // 상태 변경할 때 localStorage에 저장하는 함수
+  const saveSettingsToStorage = useCallback(
+    (
+      newSettings: Partial<{
+        tool: "pencil" | "rect" | "circle";
+        strokeColor: string;
+        fillColor: string;
+        strokeWidth: number;
+      }>
+    ) => {
+      try {
+        const prev = localStorage.getItem(STORAGE_KEY);
+        const prevSettings = prev ? JSON.parse(prev) : {};
+        const updated = { ...prevSettings, ...newSettings };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save toolbar settings", e);
+      }
+    },
+    []
+  );
+
+  // 래핑해서 상태 변경 + 저장
+  const handleSetTool = (newTool: "pencil" | "rect" | "circle") => {
+    setTool(newTool);
+    saveSettingsToStorage({ tool: newTool });
+  };
+  const handleSetStrokeColor = (color: string) => {
+    setStrokeColor(color);
+    saveSettingsToStorage({ strokeColor: color });
+  };
+  const handleSetFillColor = (color: string) => {
+    setFillColor(color);
+    saveSettingsToStorage({ fillColor: color });
+  };
+  const handleSetStrokeWidth = (width: number) => {
+    setStrokeWidth(width);
+    saveSettingsToStorage({ strokeWidth: width });
+  };
+
   return (
     <ToolbarContainer>
-      <Button selected={tool === "pencil"} onClick={() => setTool("pencil")}>
+      <Button
+        selected={tool === "pencil"}
+        onClick={() => handleSetTool("pencil")}
+      >
         연필
       </Button>
-      <Button selected={tool === "rect"} onClick={() => setTool("rect")}>
+      <Button selected={tool === "rect"} onClick={() => handleSetTool("rect")}>
         사각형
       </Button>
-      <Button selected={tool === "circle"} onClick={() => setTool("circle")}>
+      <Button
+        selected={tool === "circle"}
+        onClick={() => handleSetTool("circle")}
+      >
         원
       </Button>
 
@@ -47,7 +96,7 @@ const Toolbar = ({
         <input
           type="color"
           value={strokeColor}
-          onChange={(e) => setStrokeColor(e.target.value)}
+          onChange={(e) => handleSetStrokeColor(e.target.value)}
           style={{ marginLeft: 4 }}
         />
       </label>
@@ -57,7 +106,7 @@ const Toolbar = ({
         <input
           type="color"
           value={fillColor}
-          onChange={(e) => setFillColor(e.target.value)}
+          onChange={(e) => handleSetFillColor(e.target.value)}
           style={{ marginLeft: 4 }}
         />
       </label>
@@ -69,7 +118,7 @@ const Toolbar = ({
           min={1}
           max={20}
           value={strokeWidth}
-          onChange={(e) => setStrokeWidth(Number(e.target.value))}
+          onChange={(e) => handleSetStrokeWidth(Number(e.target.value))}
           style={{ marginLeft: 4 }}
         />
       </label>

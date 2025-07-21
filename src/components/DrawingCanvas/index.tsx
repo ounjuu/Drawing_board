@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Stage, Layer, Line, Rect, Circle } from "react-konva";
 import type { KonvaEventObject } from "konva/lib/Node";
 
@@ -17,13 +17,24 @@ const CanvasWrapper = styled.div`
   margin-top: 10px;
 `;
 
+const STORAGE_KEY = "drawingAppShapes";
+
 const DrawingCanvas = () => {
   const [tool, setTool] = useState<"pencil" | "rect" | "circle">("pencil");
   const [strokeColor, setStrokeColor] = useState("#000000");
   const [fillColor, setFillColor] = useState("#ff0000");
   const [strokeWidth, setStrokeWidth] = useState(3);
 
-  const [shapes, setShapes] = useState<Shape[]>([]);
+  const [shapes, setShapes] = useState<Shape[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse saved shapes", e);
+    }
+    return [];
+  });
+
   const [isDrawing, setIsDrawing] = useState(false);
   const stageRef = useRef<any>(null);
 
@@ -41,6 +52,15 @@ const DrawingCanvas = () => {
     const transform = stage.getAbsoluteTransform().copy().invert();
     return transform.point(pointerPos);
   };
+
+  // shapes 상태가 변할 때마다 localStorage에 저장
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(shapes));
+    } catch (e) {
+      console.error("Failed to save shapes", e);
+    }
+  }, [shapes]);
 
   // 마우스 다운 이벤트
   const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
