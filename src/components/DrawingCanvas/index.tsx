@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Stage, Layer, Line, Rect, Circle } from "react-konva";
-import type { KonvaEventObject } from "konva/lib/Node";
-
-import type { Shape, Point } from "../../types/shapes";
-import Toolbar from "../Toolbar";
 import styled from "styled-components";
+
+import Toolbar from "../Toolbar";
+import { useCanvas } from "../../hooks/useCanvas";
 
 const Container = styled.div`
   display: flex;
@@ -17,43 +16,33 @@ const CanvasWrapper = styled.div`
   margin-top: 10px;
 `;
 
+const UNDO_KEY = "drawingAppUndoStack";
+const REDO_KEY = "drawingAppRedoStack";
 const STORAGE_KEY = "drawingAppShapes";
 
 const DrawingCanvas = () => {
-  const [tool, setTool] = useState<"pencil" | "rect" | "circle">("pencil");
-  const [strokeColor, setStrokeColor] = useState("#000000");
-  const [fillColor, setFillColor] = useState("#ff0000");
-  const [strokeWidth, setStrokeWidth] = useState(3);
+  const {
+    tool,
+    setTool,
+    strokeColor,
+    setStrokeColor,
+    fillColor,
+    setFillColor,
+    strokeWidth,
+    setStrokeWidth,
+    shapes,
+    setShapes,
+    stageRef,
+    undoStack,
+    redoStack,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleUndo,
+    handleRedo,
+  } = useCanvas();
 
-  const [shapes, setShapes] = useState<Shape[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error("Failed to parse saved shapes", e);
-    }
-    return [];
-  });
-
-  const [isDrawing, setIsDrawing] = useState(false);
-  const stageRef = useRef<any>(null);
-
-  // Undo/Redo 스택
-  const [undoStack, setUndoStack] = useState<Shape[][]>([]);
-  const [redoStack, setRedoStack] = useState<Shape[][]>([]);
-
-  // 현재 그리는 도형 상태 (선/도형)
-  const [currentShape, setCurrentShape] = useState<Shape | null>(null);
-
-  // Helper: 현재 마우스 위치 가져오기
-  const getRelativePointerPosition = (stage: any): Point | null => {
-    const pointerPos = stage.getPointerPosition();
-    if (!pointerPos) return null;
-    const transform = stage.getAbsoluteTransform().copy().invert();
-    return transform.point(pointerPos);
-  };
-
-  // shapes 상태가 변할 때마다 localStorage에 저장
+  // 저장 상태 동기화
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(shapes));
@@ -62,130 +51,21 @@ const DrawingCanvas = () => {
     }
   }, [shapes]);
 
-  // 마우스 다운 이벤트
-  const handleMouseDown = (e: KonvaEventObject<MouseEvent>) => {
-    if (isDrawing) return; // 이미 그리는 중이면 무시
-    const stage = e.target.getStage();
-    if (!stage) return;
-    const pos = getRelativePointerPosition(stage);
-    if (!pos) return;
-
-    setIsDrawing(true);
-
-    if (tool === "pencil") {
-      const newLine: Shape = {
-        id: `${Date.now()}`,
-        type: "line",
-        points: [pos.x, pos.y],
-        strokeColor,
-        strokeWidth,
-      };
-      setCurrentShape(newLine);
-      setShapes((prev) => [...prev, newLine]);
-      setUndoStack((prev) => [...prev, shapes]);
-      setRedoStack([]);
-    } else if (tool === "rect") {
-      const newRect: Shape = {
-        id: `${Date.now()}`,
-        type: "rect",
-        x: pos.x,
-        y: pos.y,
-        width: 0,
-        height: 0,
-        strokeColor,
-        strokeWidth,
-        fillColor,
-      };
-      setCurrentShape(newRect);
-      setShapes((prev) => [...prev, newRect]);
-      setUndoStack((prev) => [...prev, shapes]);
-      setRedoStack([]);
-    } else if (tool === "circle") {
-      const newCircle: Shape = {
-        id: `${Date.now()}`,
-        type: "circle",
-        x: pos.x,
-        y: pos.y,
-        radius: 0,
-        strokeColor,
-        strokeWidth,
-        fillColor,
-      };
-      setCurrentShape(newCircle);
-      setShapes((prev) => [...prev, newCircle]);
-      setUndoStack((prev) => [...prev, shapes]);
-      setRedoStack([]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack));
+    } catch (e) {
+      console.error("Failed to save undo stack", e);
     }
-  };
+  }, [undoStack]);
 
-  // 마우스 무브 이벤트
-  const handleMouseMove = (e: KonvaEventObject<MouseEvent>) => {
-    if (!isDrawing || !currentShape) return;
-    const stage = e.target.getStage();
-    if (!stage) return;
-    const pos = getRelativePointerPosition(stage);
-    if (!pos) return;
-
-    if (currentShape.type === "line") {
-      // line points 업데이트
-      const newPoints = [...(currentShape.points || []), pos.x, pos.y];
-      const updatedLine = { ...currentShape, points: newPoints };
-      setCurrentShape(updatedLine);
-      setShapes((prev) =>
-        prev.map((shape) => (shape.id === updatedLine.id ? updatedLine : shape))
-      );
-    } else if (currentShape.type === "rect") {
-      // rect width, height 업데이트
-      const newWidth = pos.x - currentShape.x;
-      const newHeight = pos.y - currentShape.y;
-      const updatedRect = {
-        ...currentShape,
-        width: newWidth,
-        height: newHeight,
-      };
-      setCurrentShape(updatedRect);
-      setShapes((prev) =>
-        prev.map((shape) => (shape.id === updatedRect.id ? updatedRect : shape))
-      );
-    } else if (currentShape.type === "circle") {
-      // radius는 원점과 현재 포인터 거리 계산
-      const dx = pos.x - currentShape.x;
-      const dy = pos.y - currentShape.y;
-      const newRadius = Math.sqrt(dx * dx + dy * dy);
-      const updatedCircle = { ...currentShape, radius: newRadius };
-      setCurrentShape(updatedCircle);
-      setShapes((prev) =>
-        prev.map((shape) =>
-          shape.id === updatedCircle.id ? updatedCircle : shape
-        )
-      );
+  useEffect(() => {
+    try {
+      localStorage.setItem(REDO_KEY, JSON.stringify(redoStack));
+    } catch (e) {
+      console.error("Failed to save redo stack", e);
     }
-  };
-
-  // 마우스 업 이벤트
-  const handleMouseUp = () => {
-    if (!isDrawing) return;
-    setIsDrawing(false);
-    setCurrentShape(null);
-  };
-
-  // Undo 함수
-  const handleUndo = () => {
-    if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1];
-    setRedoStack((r) => [...r, shapes]);
-    setShapes(prev);
-    setUndoStack((u) => u.slice(0, u.length - 1));
-  };
-
-  // Redo 함수
-  const handleRedo = () => {
-    if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
-    setUndoStack((u) => [...u, shapes]);
-    setShapes(next);
-    setRedoStack((r) => r.slice(0, r.length - 1));
-  };
+  }, [redoStack]);
 
   return (
     <Container>

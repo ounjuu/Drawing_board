@@ -1,108 +1,206 @@
-// import { useRef, useState } from "react";
-// import type { RefObject } from "react";
+import { useState, useRef } from "react";
+import type { Shape, Point } from "../types/shapes";
 
-// type Tool = "line" | "rect" | "circle";
+const UNDO_KEY = "drawingAppUndoStack";
+const REDO_KEY = "drawingAppRedoStack";
+const STORAGE_KEY = "drawingAppShapes";
 
-// export const useCanvas = (canvasRef: RefObject<HTMLCanvasElement | null>) => {
-//   const [isDrawing, setIsDrawing] = useState(false);
-//   const [tool, setTool] = useState<Tool>("line");
-//   const [strokeColor, setStrokeColor] = useState("#000000");
-//   const [fillColor, setFillColor] = useState("#ffffff");
-//   const [lineWidth, setLineWidth] = useState(2);
+export const useCanvas = () => {
+  const [tool, setTool] = useState<"pencil" | "rect" | "circle">("pencil");
+  const [strokeColor, setStrokeColor] = useState("#000000");
+  const [fillColor, setFillColor] = useState("#ff0000");
+  const [strokeWidth, setStrokeWidth] = useState(3);
 
-//   const startX = useRef(0);
-//   const startY = useRef(0);
-//   const snapshot = useRef<ImageData | null>(null);
+  const [shapes, setShapes] = useState<Shape[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error("Failed to parse saved shapes", e);
+    }
+    return [];
+  });
 
-//   const getCtx = () => {
-//     const canvas = canvasRef.current;
-//     return canvas?.getContext("2d") ?? null;
-//   };
+  const [isDrawing, setIsDrawing] = useState(false);
+  const stageRef = useRef<any>(null);
 
-//   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-//     const canvas = canvasRef.current;
-//     if (!canvas) return;
+  const [undoStack, setUndoStack] = useState<Shape[][]>(() => {
+    try {
+      const saved = localStorage.getItem(UNDO_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [redoStack, setRedoStack] = useState<Shape[][]>(() => {
+    try {
+      const saved = localStorage.getItem(REDO_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
-//     const ctx = getCtx();
-//     if (!ctx) return;
+  const [currentShape, setCurrentShape] = useState<Shape | null>(null);
 
-//     const rect = canvas.getBoundingClientRect();
-//     startX.current = e.clientX - rect.left;
-//     startY.current = e.clientY - rect.top;
+  // 포인터 위치 계산
+  const getRelativePointerPosition = (stage: any): Point | null => {
+    const pointerPos = stage.getPointerPosition();
+    if (!pointerPos) return null;
+    const transform = stage.getAbsoluteTransform().copy().invert();
+    return transform.point(pointerPos);
+  };
 
-//     snapshot.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
-//     setIsDrawing(true);
-//   };
+  // 저장된 shapes, undoStack, redoStack 로컬스토리지 동기화
+  // (이 부분은 분리한 컴포넌트에서 useEffect로 관리해도 괜찮아요)
 
-//   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-//     if (!isDrawing) return;
-//     const canvas = canvasRef.current;
-//     const ctx = getCtx();
-//     if (!ctx || !canvas || !snapshot.current) return;
+  // 마우스 다운
+  const handleMouseDown = (e: any) => {
+    if (isDrawing) return;
+    const stage = e.target.getStage();
+    if (!stage) return;
+    const pos = getRelativePointerPosition(stage);
+    if (!pos) return;
 
-//     const rect = canvas.getBoundingClientRect();
-//     const x = e.clientX - rect.left;
-//     const y = e.clientY - rect.top;
+    setIsDrawing(true);
 
-//     ctx.putImageData(snapshot.current, 0, 0);
+    if (tool === "pencil") {
+      const newLine: Shape = {
+        id: `${Date.now()}`,
+        type: "line",
+        points: [pos.x, pos.y],
+        strokeColor,
+        strokeWidth,
+      };
+      setCurrentShape(newLine);
+      const newShapes = [...shapes, newLine];
+      setShapes(newShapes);
+      setUndoStack((prev) => [...prev, shapes]);
+      setRedoStack([]);
+    } else if (tool === "rect") {
+      const newRect: Shape = {
+        id: `${Date.now()}`,
+        type: "rect",
+        x: pos.x,
+        y: pos.y,
+        width: 0,
+        height: 0,
+        strokeColor,
+        strokeWidth,
+        fillColor,
+      };
+      setCurrentShape(newRect);
+      const newShapes = [...shapes, newRect];
+      setShapes(newShapes);
+      setUndoStack((prev) => [...prev, shapes]);
+      setRedoStack([]);
+    } else if (tool === "circle") {
+      const newCircle: Shape = {
+        id: `${Date.now()}`,
+        type: "circle",
+        x: pos.x,
+        y: pos.y,
+        radius: 0,
+        strokeColor,
+        strokeWidth,
+        fillColor,
+      };
+      setCurrentShape(newCircle);
+      const newShapes = [...shapes, newCircle];
+      setShapes(newShapes);
+      setUndoStack((prev) => [...prev, shapes]);
+      setRedoStack([]);
+    }
+  };
 
-//     ctx.strokeStyle = strokeColor;
-//     ctx.fillStyle = fillColor;
-//     ctx.lineWidth = lineWidth;
+  // 마우스 무브
+  const handleMouseMove = (e: any) => {
+    if (!isDrawing || !currentShape) return;
+    const stage = e.target.getStage();
+    if (!stage) return;
+    const pos = getRelativePointerPosition(stage);
+    if (!pos) return;
 
-//     const width = x - startX.current;
-//     const height = y - startY.current;
+    if (currentShape.type === "line") {
+      const newPoints = [...(currentShape.points || []), pos.x, pos.y];
+      const updatedLine = { ...currentShape, points: newPoints };
+      setCurrentShape(updatedLine);
+      setShapes((prev) =>
+        prev.map((shape) => (shape.id === updatedLine.id ? updatedLine : shape))
+      );
+    } else if (currentShape.type === "rect") {
+      const newWidth = pos.x - currentShape.x;
+      const newHeight = pos.y - currentShape.y;
+      const updatedRect = {
+        ...currentShape,
+        width: newWidth,
+        height: newHeight,
+      };
+      setCurrentShape(updatedRect);
+      setShapes((prev) =>
+        prev.map((shape) => (shape.id === updatedRect.id ? updatedRect : shape))
+      );
+    } else if (currentShape.type === "circle") {
+      const dx = pos.x - currentShape.x;
+      const dy = pos.y - currentShape.y;
+      const newRadius = Math.sqrt(dx * dx + dy * dy);
+      const updatedCircle = { ...currentShape, radius: newRadius };
+      setCurrentShape(updatedCircle);
+      setShapes((prev) =>
+        prev.map((shape) =>
+          shape.id === updatedCircle.id ? updatedCircle : shape
+        )
+      );
+    }
+  };
 
-//     switch (tool) {
-//       case "line":
-//         ctx.beginPath();
-//         ctx.moveTo(startX.current, startY.current);
-//         ctx.lineTo(x, y);
-//         ctx.stroke();
-//         break;
-//       case "rect":
-//         ctx.beginPath();
-//         ctx.rect(startX.current, startY.current, width, height);
-//         ctx.fill();
-//         ctx.stroke();
-//         break;
-//       case "circle":
-//         ctx.beginPath();
-//         const radius = Math.sqrt(width * width + height * height);
-//         ctx.arc(startX.current, startY.current, radius, 0, Math.PI * 2);
-//         ctx.fill();
-//         ctx.stroke();
-//         break;
-//     }
-//   };
+  // 마우스 업
+  const handleMouseUp = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    setCurrentShape(null);
+  };
 
-//   const stopDrawing = () => {
-//     setIsDrawing(false);
-//   };
+  // Undo
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    setRedoStack((r) => [...r, shapes]);
+    setShapes(prev);
+    setUndoStack((u) => u.slice(0, u.length - 1));
+  };
 
-//   const saveToImage = () => {
-//     const canvas = canvasRef.current;
-//     if (!canvas) return;
+  // Redo
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    setUndoStack((u) => [...u, shapes]);
+    setShapes(next);
+    setRedoStack((r) => r.slice(0, r.length - 1));
+  };
 
-//     const dataURL = canvas.toDataURL("image/png");
-//     const a = document.createElement("a");
-//     a.href = dataURL;
-//     a.download = "drawing.png";
-//     a.click();
-//   };
-
-//   return {
-//     tool,
-//     strokeColor,
-//     fillColor,
-//     lineWidth,
-//     setTool,
-//     setStrokeColor,
-//     setFillColor,
-//     setLineWidth,
-//     startDrawing,
-//     draw,
-//     stopDrawing,
-//     saveToImage,
-//   };
-// };
+  return {
+    tool,
+    setTool,
+    strokeColor,
+    setStrokeColor,
+    fillColor,
+    setFillColor,
+    strokeWidth,
+    setStrokeWidth,
+    shapes,
+    setShapes,
+    isDrawing,
+    setIsDrawing,
+    stageRef,
+    undoStack,
+    redoStack,
+    currentShape,
+    setCurrentShape,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleUndo,
+    handleRedo,
+  };
+};

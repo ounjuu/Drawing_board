@@ -1,6 +1,8 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { ToolbarContainer, Button } from "./styled";
 import { IoArrowRedo, IoArrowUndo } from "react-icons/io5";
+
+type Pos = { x: number; y: number };
 
 type Props = {
   tool: "pencil" | "rect" | "circle";
@@ -18,6 +20,7 @@ type Props = {
 };
 
 const STORAGE_KEY = "drawingAppToolbarSettings";
+const TOOLBAR_POS_KEY = "drawingAppToolbarPos";
 
 const Toolbar = ({
   tool,
@@ -72,6 +75,24 @@ const Toolbar = ({
     setStrokeWidth(width);
     saveSettingsToStorage({ strokeWidth: width });
   };
+
+  // 툴바 위치 저장
+  const [toolbarPos, setToolbarPos] = useState<Pos>(() => {
+    try {
+      const saved = localStorage.getItem(TOOLBAR_POS_KEY);
+      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+    } catch {
+      return { x: 0, y: 0 };
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(toolbarPos));
+    } catch (e) {
+      console.error("Failed to save toolbar position", e);
+    }
+  }, [toolbarPos]);
 
   return (
     <ToolbarContainer>
