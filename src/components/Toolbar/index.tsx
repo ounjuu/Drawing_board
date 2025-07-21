@@ -1,6 +1,16 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { ToolbarContainer, Button } from "./styled";
 import { IoArrowRedo, IoArrowUndo } from "react-icons/io5";
+import { IoIosColorPalette } from "react-icons/io";
+import { IoColorFill } from "react-icons/io5";
+// 연필
+import { FaPen } from "react-icons/fa";
+// 사각형
+import { FaRegSquare } from "react-icons/fa";
+// 원
+import { FaRegCircle } from "react-icons/fa";
+// 라인 굵기
+import { MdLineWeight } from "react-icons/md";
 
 type Pos = { x: number; y: number };
 
@@ -100,20 +110,20 @@ const Toolbar = ({
         selected={tool === "pencil"}
         onClick={() => handleSetTool("pencil")}
       >
-        연필
+        <FaPen />
       </Button>
       <Button selected={tool === "rect"} onClick={() => handleSetTool("rect")}>
-        사각형
+        <FaRegSquare />
       </Button>
       <Button
         selected={tool === "circle"}
         onClick={() => handleSetTool("circle")}
       >
-        원
+        <FaRegCircle />
       </Button>
 
       <label>
-        선 색상:
+        <IoIosColorPalette />
         <input
           type="color"
           value={strokeColor}
@@ -123,7 +133,7 @@ const Toolbar = ({
       </label>
 
       <label>
-        채우기 색상:
+        <IoColorFill />
         <input
           type="color"
           value={fillColor}
@@ -133,7 +143,7 @@ const Toolbar = ({
       </label>
 
       <label>
-        선 굵기:
+        <MdLineWeight />
         <input
           type="range"
           min={1}

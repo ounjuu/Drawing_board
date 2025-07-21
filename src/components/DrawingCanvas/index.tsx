@@ -1,29 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 // konva 사용
 import { Stage, Layer, Line, Rect, Circle } from "react-konva";
-import styled from "styled-components";
+import { Container, ToolbarWrapper, CanvasWrapper } from "./styled";
+
+// 드래그 라이브러리
+import Draggable from "react-draggable";
 
 // 툴바
 import Toolbar from "../Toolbar";
 // 함수
 import { useCanvas } from "../../hooks/useCanvas";
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const CanvasWrapper = styled.div`
-  border: 1px solid #ccc;
-  margin-top: 10px;
-`;
-
 const UNDO_KEY = "drawingAppUndoStack";
 const REDO_KEY = "drawingAppRedoStack";
 const STORAGE_KEY = "drawingAppShapes";
 
 const DrawingCanvas = () => {
+  const nodeRef = useRef<HTMLDivElement>(null);
   const {
     tool,
     setTool,
@@ -73,20 +66,25 @@ const DrawingCanvas = () => {
 
   return (
     <Container>
-      <Toolbar
-        tool={tool}
-        setTool={setTool}
-        strokeColor={strokeColor}
-        setStrokeColor={setStrokeColor}
-        fillColor={fillColor}
-        setFillColor={setFillColor}
-        strokeWidth={strokeWidth}
-        setStrokeWidth={setStrokeWidth}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        canUndo={undoStack.length > 0}
-        canRedo={redoStack.length > 0}
-      />
+      <Draggable nodeRef={nodeRef}>
+        <ToolbarWrapper ref={nodeRef}>
+          <Toolbar
+            tool={tool}
+            setTool={setTool}
+            strokeColor={strokeColor}
+            setStrokeColor={setStrokeColor}
+            fillColor={fillColor}
+            setFillColor={setFillColor}
+            strokeWidth={strokeWidth}
+            setStrokeWidth={setStrokeWidth}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={undoStack.length > 0}
+            canRedo={redoStack.length > 0}
+          />
+        </ToolbarWrapper>
+      </Draggable>
+
       <CanvasWrapper>
         <Stage
           width={800}
