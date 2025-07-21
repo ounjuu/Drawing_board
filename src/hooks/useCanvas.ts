@@ -32,6 +32,7 @@ export const useCanvas = () => {
       return [];
     }
   });
+
   const [redoStack, setRedoStack] = useState<Shape[][]>(() => {
     try {
       const saved = localStorage.getItem(REDO_KEY);
@@ -50,9 +51,6 @@ export const useCanvas = () => {
     const transform = stage.getAbsoluteTransform().copy().invert();
     return transform.point(pointerPos);
   };
-
-  // 저장된 shapes, undoStack, redoStack 로컬스토리지 동기화
-  // (이 부분은 분리한 컴포넌트에서 useEffect로 관리해도 괜찮아요)
 
   // 마우스 다운
   const handleMouseDown = (e: any) => {
@@ -179,6 +177,17 @@ export const useCanvas = () => {
     setRedoStack((r) => r.slice(0, r.length - 1));
   };
 
+  // 삭제
+  const handleClearAll = () => {
+    if (window.confirm("전체 내용을 삭제하시겠습니까?")) {
+      setShapes([]);
+
+      localStorage.removeItem(UNDO_KEY);
+      localStorage.removeItem(REDO_KEY);
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  };
+
   return {
     tool,
     setTool,
@@ -202,5 +211,6 @@ export const useCanvas = () => {
     handleMouseUp,
     handleUndo,
     handleRedo,
+    handleClearAll,
   };
 };

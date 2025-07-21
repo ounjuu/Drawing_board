@@ -36,6 +36,7 @@ const DrawingCanvas = () => {
     handleMouseUp,
     handleUndo,
     handleRedo,
+    handleClearAll,
   } = useCanvas();
 
   // 그리기 저장
@@ -81,6 +82,7 @@ const DrawingCanvas = () => {
             onRedo={handleRedo}
             canUndo={undoStack.length > 0}
             canRedo={redoStack.length > 0}
+            onClearAll={handleClearAll}
           />
         </ToolbarWrapper>
       </Draggable>

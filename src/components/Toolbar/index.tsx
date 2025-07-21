@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { ToolbarContainer, Button } from "./styled";
 import { IoArrowRedo, IoArrowUndo } from "react-icons/io5";
 import { IoIosColorPalette } from "react-icons/io";
@@ -11,6 +11,8 @@ import { FaRegSquare } from "react-icons/fa";
 import { FaRegCircle } from "react-icons/fa";
 // 라인 굵기
 import { MdLineWeight } from "react-icons/md";
+// 지우개
+import { FaEraser } from "react-icons/fa";
 
 type Pos = { x: number; y: number };
 
@@ -27,6 +29,7 @@ type Props = {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  onClearAll: () => void;
 };
 
 const STORAGE_KEY = "drawingAppToolbarSettings";
@@ -45,6 +48,7 @@ const Toolbar = ({
   onRedo,
   canUndo,
   canRedo,
+  onClearAll,
 }: Props) => {
   // 상태 변경할 때 localStorage에 저장하는 함수
   const saveSettingsToStorage = useCallback(
@@ -212,6 +216,11 @@ const Toolbar = ({
       {/* 앞으로 redo*/}
       <Button onClick={onRedo} disabled={!canRedo}>
         <IoArrowRedo />
+      </Button>
+
+      {/* 전체 지우개 */}
+      <Button onClick={onClearAll}>
+        <FaEraser />
       </Button>
     </ToolbarContainer>
   );
