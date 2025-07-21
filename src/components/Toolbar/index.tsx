@@ -1,70 +1,86 @@
-import React from "react";
+import { ToolbarContainer, Button } from "./styled"; // 상대 경로 확인
+import { IoArrowRedo, IoArrowUndo } from "react-icons/io5";
 
-interface Props {
-  tool: string;
+type Props = {
+  tool: "pencil" | "rect" | "circle";
+  setTool: (tool: "pencil" | "rect" | "circle") => void;
   strokeColor: string;
-  fillColor: string;
-  lineWidth: number;
-  setTool: (tool: any) => void;
   setStrokeColor: (color: string) => void;
+  fillColor: string;
   setFillColor: (color: string) => void;
-  setLineWidth: (width: number) => void;
-  saveToImage: () => void;
-}
+  strokeWidth: number;
+  setStrokeWidth: (width: number) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+};
 
-const Toolbar: React.FC<Props> = ({
+const Toolbar = ({
   tool,
-  strokeColor,
-  fillColor,
-  lineWidth,
   setTool,
+  strokeColor,
   setStrokeColor,
+  fillColor,
   setFillColor,
-  setLineWidth,
-  saveToImage,
-}) => {
+  strokeWidth,
+  setStrokeWidth,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+}: Props) => {
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      <label>
-        Tool:
-        <select value={tool} onChange={(e) => setTool(e.target.value as any)}>
-          <option value="line">Line</option>
-          <option value="rect">Rectangle</option>
-          <option value="circle">Circle</option>
-        </select>
-      </label>
+    <ToolbarContainer>
+      <Button selected={tool === "pencil"} onClick={() => setTool("pencil")}>
+        연필
+      </Button>
+      <Button selected={tool === "rect"} onClick={() => setTool("rect")}>
+        사각형
+      </Button>
+      <Button selected={tool === "circle"} onClick={() => setTool("circle")}>
+        원
+      </Button>
 
       <label>
-        Stroke:
+        선 색상:
         <input
           type="color"
           value={strokeColor}
           onChange={(e) => setStrokeColor(e.target.value)}
+          style={{ marginLeft: 4 }}
         />
       </label>
 
       <label>
-        Fill:
+        채우기 색상:
         <input
           type="color"
           value={fillColor}
           onChange={(e) => setFillColor(e.target.value)}
+          style={{ marginLeft: 4 }}
         />
       </label>
 
       <label>
-        Width:
+        선 굵기:
         <input
           type="range"
           min={1}
           max={20}
-          value={lineWidth}
-          onChange={(e) => setLineWidth(parseInt(e.target.value))}
+          value={strokeWidth}
+          onChange={(e) => setStrokeWidth(Number(e.target.value))}
+          style={{ marginLeft: 4 }}
         />
       </label>
 
-      <button onClick={saveToImage}>💾 저장</button>
-    </div>
+      <Button onClick={onUndo} disabled={!canUndo}>
+        <IoArrowUndo />
+      </Button>
+      <Button onClick={onRedo} disabled={!canRedo}>
+        <IoArrowRedo />
+      </Button>
+    </ToolbarContainer>
   );
 };
 

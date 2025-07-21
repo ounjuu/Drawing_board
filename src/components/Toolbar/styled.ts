@@ -1,17 +1,17 @@
+// styled.ts
 import styled from "styled-components";
 
-const ToolbarContainer = styled.div.attrs(() => ({
-  draggable: true,
-}))`
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
-  cursor: grab;
-  z-index: 10;
+export const ToolbarContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
 `;
 
-export default ToolbarContainer;
+export const Button = styled.button<{ selected?: boolean }>`
+  background-color: ${(props) => (props.selected ? "#007bff" : "#eee")};
+  color: ${(props) => (props.selected ? "white" : "black")};
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+`;
