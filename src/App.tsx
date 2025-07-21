@@ -1,55 +1,22 @@
-// import { useRef } from "react";
-// import Canvas from "./components/Canvas";
-// import Toolbar from "./components/Toolbar";
-// import { useCanvas } from "./hooks/useCanvas";
-
-// export default function App() {
-//   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-//   const {
-//     tool,
-//     strokeColor,
-//     fillColor,
-//     lineWidth,
-//     setTool,
-//     setStrokeColor,
-//     setFillColor,
-//     setLineWidth,
-//     startDrawing,
-//     draw,
-//     stopDrawing,
-//     saveToImage,
-//   } = useCanvas(canvasRef);
-
-//   return (
-//     <div>
-//       <Toolbar
-//         tool={tool}
-//         strokeColor={strokeColor}
-//         fillColor={fillColor}
-//         lineWidth={lineWidth}
-//         setTool={setTool}
-//         setStrokeColor={setStrokeColor}
-//         setFillColor={setFillColor}
-//         setLineWidth={setLineWidth}
-//         saveToImage={saveToImage}
-//       />
-//       <Canvas
-//         canvasRef={canvasRef}
-//         onMouseDown={startDrawing}
-//         onMouseMove={draw}
-//         onMouseUp={stopDrawing}
-//       />
-//     </div>
-//   );
-// }
 // App.tsx
-
+import Header from "./components/Header";
 import DrawingCanvas from "./components/DrawingCanvas";
+import styled from "styled-components";
+
+const AppContainer = styled.div`
+  padding-top: 60px; /* 헤더 높이만큼 여백 */
+`;
 
 const App = () => {
   return (
     <div>
-      <DrawingCanvas />
+      {/* 헤더 */}
+      <Header />
+
+      {/* 캔버스 */}
+      <AppContainer>
+        <DrawingCanvas />
+      </AppContainer>
     </div>
   );
 };

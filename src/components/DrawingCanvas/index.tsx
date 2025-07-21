@@ -1,8 +1,11 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
+// konva 사용
 import { Stage, Layer, Line, Rect, Circle } from "react-konva";
 import styled from "styled-components";
 
+// 툴바
 import Toolbar from "../Toolbar";
+// 함수
 import { useCanvas } from "../../hooks/useCanvas";
 
 const Container = styled.div`
@@ -42,7 +45,7 @@ const DrawingCanvas = () => {
     handleRedo,
   } = useCanvas();
 
-  // 저장 상태 동기화
+  // 그리기 저장
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(shapes));
@@ -51,6 +54,7 @@ const DrawingCanvas = () => {
     }
   }, [shapes]);
 
+  // undo redo 저장
   useEffect(() => {
     try {
       localStorage.setItem(UNDO_KEY, JSON.stringify(undoStack));
