@@ -3,33 +3,42 @@ import Canvas from "./components/Canvas";
 import Toolbar from "./components/Toolbar";
 import { useCanvas } from "./hooks/useCanvas";
 
-function App() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
+export default function App() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const {
+    tool,
+    strokeColor,
+    fillColor,
+    lineWidth,
+    setTool,
+    setStrokeColor,
+    setFillColor,
+    setLineWidth,
     startDrawing,
     draw,
     stopDrawing,
-    undo,
-    redo,
     saveToImage,
-    initCanvas,
-    restoreCanvasFromLocalStorage,
   } = useCanvas(canvasRef);
 
   return (
-    <>
-      <Toolbar onUndo={undo} onRedo={redo} onSave={saveToImage} />
+    <div>
+      <Toolbar
+        tool={tool}
+        strokeColor={strokeColor}
+        fillColor={fillColor}
+        lineWidth={lineWidth}
+        setTool={setTool}
+        setStrokeColor={setStrokeColor}
+        setFillColor={setFillColor}
+        setLineWidth={setLineWidth}
+        saveToImage={saveToImage}
+      />
       <Canvas
         canvasRef={canvasRef}
-        startDrawing={startDrawing}
-        draw={draw}
-        stopDrawing={stopDrawing}
-        initCanvas={initCanvas}
-        restoreCanvasFromLocalStorage={restoreCanvasFromLocalStorage}
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
       />
-    </>
+    </div>
   );
 }
-
-export default App;

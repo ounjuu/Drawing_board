@@ -1,42 +1,40 @@
-import React, { useEffect } from "react";
-import type { RefObject } from "react";
-import { StyledCanvasWrapper, StyledCanvas } from "./styled";
+import React, { useRef, useEffect } from "react";
 
 interface Props {
-  canvasRef: RefObject<HTMLCanvasElement | null>;
-  startDrawing: (e: React.MouseEvent | React.TouchEvent) => void;
-  draw: (e: React.MouseEvent | React.TouchEvent) => void;
-  stopDrawing: () => void;
-  initCanvas: () => void;
-  restoreCanvasFromLocalStorage: () => void;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  onMouseDown: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onMouseMove: (e: React.MouseEvent<HTMLCanvasElement>) => void;
+  onMouseUp: () => void;
 }
 
 const Canvas: React.FC<Props> = ({
   canvasRef,
-  startDrawing,
-  draw,
-  stopDrawing,
-  initCanvas,
-  restoreCanvasFromLocalStorage,
+  onMouseDown,
+  onMouseMove,
+  onMouseUp,
 }) => {
   useEffect(() => {
-    initCanvas();
-    restoreCanvasFromLocalStorage();
-  }, [initCanvas, restoreCanvasFromLocalStorage]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // 모바일 대응 확대
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight - 100;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
 
   return (
-    <StyledCanvasWrapper>
-      <StyledCanvas
-        ref={canvasRef}
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseLeave={stopDrawing}
-        onTouchStart={startDrawing}
-        onTouchMove={draw}
-        onTouchEnd={stopDrawing}
-      />
-    </StyledCanvasWrapper>
+    <canvas
+      ref={canvasRef}
+      style={{ border: "1px solid gray", touchAction: "none" }}
+      onMouseDown={onMouseDown}
+      onMouseMove={onMouseMove}
+      onMouseUp={onMouseUp}
+    />
   );
 };
 

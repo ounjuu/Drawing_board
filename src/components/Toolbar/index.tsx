@@ -1,19 +1,70 @@
 import React from "react";
-import ToolbarContainer from "./styled";
 
 interface Props {
-  onUndo: () => void;
-  onRedo: () => void;
-  onSave: () => void;
+  tool: string;
+  strokeColor: string;
+  fillColor: string;
+  lineWidth: number;
+  setTool: (tool: any) => void;
+  setStrokeColor: (color: string) => void;
+  setFillColor: (color: string) => void;
+  setLineWidth: (width: number) => void;
+  saveToImage: () => void;
 }
 
-const Toolbar = ({ onUndo, onRedo, onSave }: Props) => {
+const Toolbar: React.FC<Props> = ({
+  tool,
+  strokeColor,
+  fillColor,
+  lineWidth,
+  setTool,
+  setStrokeColor,
+  setFillColor,
+  setLineWidth,
+  saveToImage,
+}) => {
   return (
-    <ToolbarContainer>
-      <button onClick={onUndo}>Undo</button>
-      <button onClick={onRedo}>Redo</button>
-      <button onClick={onSave}>Save</button>
-    </ToolbarContainer>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <label>
+        Tool:
+        <select value={tool} onChange={(e) => setTool(e.target.value as any)}>
+          <option value="line">Line</option>
+          <option value="rect">Rectangle</option>
+          <option value="circle">Circle</option>
+        </select>
+      </label>
+
+      <label>
+        Stroke:
+        <input
+          type="color"
+          value={strokeColor}
+          onChange={(e) => setStrokeColor(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Fill:
+        <input
+          type="color"
+          value={fillColor}
+          onChange={(e) => setFillColor(e.target.value)}
+        />
+      </label>
+
+      <label>
+        Width:
+        <input
+          type="range"
+          min={1}
+          max={20}
+          value={lineWidth}
+          onChange={(e) => setLineWidth(parseInt(e.target.value))}
+        />
+      </label>
+
+      <button onClick={saveToImage}>💾 저장</button>
+    </div>
   );
 };
 
