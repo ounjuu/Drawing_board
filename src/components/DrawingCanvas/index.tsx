@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 // konva 사용
 import { Stage, Layer, Line, Rect, Circle } from "react-konva";
 import { Container, ToolbarWrapper, CanvasWrapper } from "./styled";
@@ -14,6 +14,9 @@ import { useCanvas } from "../../hooks/useCanvas";
 const UNDO_KEY = "drawingAppUndoStack";
 const REDO_KEY = "drawingAppRedoStack";
 const STORAGE_KEY = "drawingAppShapes";
+const TOOLBAR_POS_KEY = "drawingAppToolbarPos";
+
+type Pos = { x: number; y: number };
 
 const DrawingCanvas = () => {
   const nodeRef = useRef<HTMLDivElement>(null);
@@ -65,9 +68,29 @@ const DrawingCanvas = () => {
     }
   }, [redoStack]);
 
+  // ✅ 로컬스토리지 저장
+  const [toolbarPos, setToolbarPos] = useState<Pos>(() => {
+    const saved = localStorage.getItem("drawingAppToolbarPos");
+    return saved ? JSON.parse(saved) : { x: 0, y: 0 };
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(toolbarPos));
+    } catch (e) {
+      console.error("Failed to save toolbar position", e);
+    }
+  }, [toolbarPos]);
+
   return (
     <Container>
-      <Draggable nodeRef={nodeRef}>
+      <Draggable
+        nodeRef={nodeRef}
+        position={toolbarPos}
+        onStop={(_, data) => {
+          setToolbarPos({ x: data.x, y: data.y });
+        }}
+      >
         <ToolbarWrapper ref={nodeRef}>
           <Toolbar
             tool={tool}

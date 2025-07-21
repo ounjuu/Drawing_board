@@ -4,6 +4,8 @@ import type { Shape, Point } from "../types/shapes";
 const UNDO_KEY = "drawingAppUndoStack";
 const REDO_KEY = "drawingAppRedoStack";
 const STORAGE_KEY = "drawingAppShapes";
+const TOOLBAR_POS_KEY = "drawingAppToolbarPos";
+const TOOLBAR_STORAGE_KEY = "drawingAppToolbarSettings";
 
 export const useCanvas = () => {
   const [tool, setTool] = useState<"pencil" | "rect" | "circle">("pencil");
@@ -185,6 +187,8 @@ export const useCanvas = () => {
       localStorage.removeItem(UNDO_KEY);
       localStorage.removeItem(REDO_KEY);
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(TOOLBAR_POS_KEY);
+      localStorage.removeItem(TOOLBAR_STORAGE_KEY);
     }
   };
 

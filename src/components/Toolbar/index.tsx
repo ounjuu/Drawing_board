@@ -14,8 +14,6 @@ import { MdLineWeight } from "react-icons/md";
 // 지우개
 import { FaEraser } from "react-icons/fa";
 
-type Pos = { x: number; y: number };
-
 type Props = {
   tool: "pencil" | "rect" | "circle";
   setTool: (tool: "pencil" | "rect" | "circle") => void;
@@ -32,8 +30,7 @@ type Props = {
   onClearAll: () => void;
 };
 
-const STORAGE_KEY = "drawingAppToolbarSettings";
-const TOOLBAR_POS_KEY = "drawingAppToolbarPos";
+const TOOLBAR_STORAGE_KEY = "drawingAppToolbarSettings";
 
 const Toolbar = ({
   tool,
@@ -61,10 +58,10 @@ const Toolbar = ({
       }>
     ) => {
       try {
-        const prev = localStorage.getItem(STORAGE_KEY);
+        const prev = localStorage.getItem(TOOLBAR_STORAGE_KEY);
         const prevSettings = prev ? JSON.parse(prev) : {};
         const updated = { ...prevSettings, ...newSettings };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        localStorage.setItem(TOOLBAR_STORAGE_KEY, JSON.stringify(updated));
       } catch (e) {
         console.error("Failed to save toolbar settings", e);
       }
@@ -99,24 +96,6 @@ const Toolbar = ({
     setShowStrokeWidthOptions(false); // 선택하면 메뉴 닫기
   };
 
-  // 툴바 위치 저장
-  const [toolbarPos, setToolbarPos] = useState<Pos>(() => {
-    try {
-      const saved = localStorage.getItem(TOOLBAR_POS_KEY);
-      return saved ? JSON.parse(saved) : { x: 0, y: 0 };
-    } catch {
-      return { x: 0, y: 0 };
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(TOOLBAR_POS_KEY, JSON.stringify(toolbarPos));
-    } catch (e) {
-      console.error("Failed to save toolbar position", e);
-    }
-  }, [toolbarPos]);
-
   return (
     <ToolbarContainer>
       {/* 자유 그리기, 도형 선택 */}
@@ -143,7 +122,7 @@ const Toolbar = ({
           type="color"
           value={strokeColor}
           onChange={(e) => handleSetStrokeColor(e.target.value)}
-          style={{ marginLeft: 4 }}
+          style={{ padding: "0px 12px" }}
         />
       </label>
 
@@ -154,7 +133,7 @@ const Toolbar = ({
           type="color"
           value={fillColor}
           onChange={(e) => handleSetFillColor(e.target.value)}
-          style={{ marginLeft: 4 }}
+          style={{ padding: "0px 12px" }}
         />
       </label>
 
