@@ -40,6 +40,7 @@ const DrawingCanvas = () => {
     handleUndo,
     handleRedo,
     handleClearAll,
+    handleShapeClick,
   } = useCanvas();
 
   // 그리기 저장
@@ -146,6 +147,10 @@ const DrawingCanvas = () => {
                       stroke={shape.strokeColor}
                       strokeWidth={shape.strokeWidth}
                       fill={shape.fillColor}
+                      onClick={(e) => {
+                        e.cancelBubble = true;
+                        handleShapeClick(shape.id);
+                      }}
                     />
                   );
                 case "circle":
@@ -158,6 +163,10 @@ const DrawingCanvas = () => {
                       stroke={shape.strokeColor}
                       strokeWidth={shape.strokeWidth}
                       fill={shape.fillColor}
+                      onClick={(e) => {
+                        e.cancelBubble = true;
+                        handleShapeClick(shape.id);
+                      }}
                     />
                   );
                 default:

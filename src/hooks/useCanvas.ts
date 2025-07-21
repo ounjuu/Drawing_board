@@ -8,7 +8,9 @@ const TOOLBAR_POS_KEY = "drawingAppToolbarPos";
 const TOOLBAR_STORAGE_KEY = "drawingAppToolbarSettings";
 
 export const useCanvas = () => {
-  const [tool, setTool] = useState<"pencil" | "rect" | "circle">("pencil");
+  const [tool, setTool] = useState<"pencil" | "rect" | "circle" | "fill">(
+    "pencil"
+  );
   const [strokeColor, setStrokeColor] = useState("#000000");
   const [fillColor, setFillColor] = useState("#ff0000");
   const [strokeWidth, setStrokeWidth] = useState(3);
@@ -61,6 +63,10 @@ export const useCanvas = () => {
     if (!stage) return;
     const pos = getRelativePointerPosition(stage);
     if (!pos) return;
+
+    // Fill 툴일 경우 도형 클릭 처리로 넘긴다
+    console.log("MouseDown tool:", tool);
+    if (tool === "fill") return;
 
     setIsDrawing(true);
 
@@ -183,13 +189,23 @@ export const useCanvas = () => {
   const handleClearAll = () => {
     if (window.confirm("전체 내용을 삭제하시겠습니까?")) {
       setShapes([]);
-
       localStorage.removeItem(UNDO_KEY);
       localStorage.removeItem(REDO_KEY);
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(TOOLBAR_POS_KEY);
       localStorage.removeItem(TOOLBAR_STORAGE_KEY);
     }
+  };
+  const handleShapeClick = (id: string) => {
+    console.log("shapeclick tool:", tool);
+    if (tool !== "fill") return;
+
+    setUndoStack((prev) => [...prev, shapes]);
+    const updated = shapes.map((shape) =>
+      shape.id === id ? { ...shape, fillColor } : shape
+    );
+    setShapes(updated);
+    setRedoStack([]);
   };
 
   return {
@@ -216,5 +232,6 @@ export const useCanvas = () => {
     handleUndo,
     handleRedo,
     handleClearAll,
+    handleShapeClick,
   };
 };

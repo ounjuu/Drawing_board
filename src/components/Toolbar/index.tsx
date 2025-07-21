@@ -15,8 +15,8 @@ import { MdLineWeight } from "react-icons/md";
 import { FaEraser } from "react-icons/fa";
 
 type Props = {
-  tool: "pencil" | "rect" | "circle";
-  setTool: (tool: "pencil" | "rect" | "circle") => void;
+  tool: "pencil" | "rect" | "circle" | "fill";
+  setTool: (tool: "pencil" | "rect" | "circle" | "fill") => void;
   strokeColor: string;
   setStrokeColor: (color: string) => void;
   fillColor: string;
@@ -51,7 +51,7 @@ const Toolbar = ({
   const saveSettingsToStorage = useCallback(
     (
       newSettings: Partial<{
-        tool: "pencil" | "rect" | "circle";
+        tool: "pencil" | "rect" | "circle" | "fill";
         strokeColor: string;
         fillColor: string;
         strokeWidth: number;
@@ -70,7 +70,7 @@ const Toolbar = ({
   );
 
   // 래핑해서 상태 변경 + 저장
-  const handleSetTool = (newTool: "pencil" | "rect" | "circle") => {
+  const handleSetTool = (newTool: "pencil" | "rect" | "circle" | "fill") => {
     setTool(newTool);
     saveSettingsToStorage({ tool: newTool });
   };
@@ -113,6 +113,9 @@ const Toolbar = ({
         onClick={() => handleSetTool("circle")}
       >
         <FaRegCircle />
+      </Button>
+      <Button selected={tool === "fill"} onClick={() => handleSetTool("fill")}>
+        <IoColorFill />
       </Button>
 
       {/* 선 색깔 */}
